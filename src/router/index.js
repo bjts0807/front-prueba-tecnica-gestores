@@ -23,7 +23,7 @@ const routes = [
   {
     path: "/strengtheningSupervisionMans",
     name: "strengtheningSupervisionMans.create",
-    component: () => import("../views/strengtheningSupervisionMans/CreateComponent"),
+    component: () => import("../views/strengtheningSupervisionMans/createdosComponent"),
     meta : {requiresLogin: true},
   },
   
