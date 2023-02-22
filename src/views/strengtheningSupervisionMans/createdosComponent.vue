@@ -155,6 +155,7 @@
 
                 try {
                   
+                  //console.log((date.value.getFullYear() + '-' + (date.value.getMonth() + 1) + '-' + date.value.getDate() ));
                     // Create a formatter using the "sv-SE" locale
                     const dateFormatter = Intl.DateTimeFormat('sv-SE');
 
