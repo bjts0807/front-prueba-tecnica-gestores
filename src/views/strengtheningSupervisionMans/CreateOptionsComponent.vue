@@ -11,17 +11,17 @@
                  <div class="card-body">
                             <h5 class="card-title">Registro de Gestores</h5>
                             <div class="row mt-2">
-                                
+                                <VueDatePicker v-model="date" :format="format"></VueDatePicker>
                                 <div class="col-lg-3 col-md-16 col-sm-12">
                                     <div class="form-group">
                                         <label class="form-label small">Fecha Revisión</label>
-                                       <VueDatePicker v-model="date" :format="format"></VueDatePicker>
+                                        <input type="month" class="form-control">
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-md-16 col-sm-12 mb-3">
                                     <div class="form-group">
                                         <label class="form-label small">NAc</label>
-                                        <select name="" id="" class="form-control" v-model="nac" >
+                                        <select name="" id="" class="form-control" v-model="supervision_mans.nac" >
                                             <option :value="item" v-for="item in nacs" :key="item.id">{{item.name}}</option>
                                         </select>
                                     </div>
@@ -29,7 +29,7 @@
                                 <div class="col-lg-3 col-md-16 col-sm-12">
                                     <div class="form-group">
                                         <label class="form-label small">Rol</label>
-                                        <select name="" id="" class="form-control" v-model="rol" >
+                                        <select name="" id="" class="form-control" v-model="supervision_mans.rol" >
                                             <option :value="item" v-for="item in roles" :key="item.id">{{item.name}}</option>
                                         </select>
                                     </div>
@@ -37,13 +37,13 @@
                                 <div class="col-lg-3 col-md-16 col-sm-12">
                                     <div class="form-group">
                                         <label class="form-label small">Hora Inicio</label>
-                                        <input type="time" class="form-control" v-model="start_time">
+                                        <input type="time" class="form-control">
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-md-16 col-sm-12">
                                     <div class="form-group">
                                         <label class="form-label small">Hora Final</label>
-                                        <input type="time" class="form-control" v-model="final_time">
+                                        <input type="time" class="form-control">
                                     </div>
                                 </div>
                                 <div class="row mt-2">
@@ -60,7 +60,7 @@
                                                 accepted-file-types="image/jpeg, image/png, image/jpg"
                                                 labelFileTypeNotAllowed="Tipo de archivo no es valido..."
                                                 fileValidateTypeLabelExpectedTypes="Archivos permitidos png, jpg"
-                                               v-on:updatefiles="fileActivityImage"
+                                                v-on:updatefiles="handleFilePondUpdateFile"
                                             />
                                         </div>
                                     </div>
@@ -77,7 +77,7 @@
                                                 accepted-file-types="image/jpeg, image/png, image/jpg"
                                                 labelFileTypeNotAllowed="Tipo de archivo no es valido..."
                                                 fileValidateTypeLabelExpectedTypes="Archivos permitidos png, jpg"
-                                                v-on:updatefiles="fileParticipationImage"
+                                                v-on:updatefiles="handleFilePondUpdateFile"
                                             />
                                         </div>
                                     </div>
@@ -94,11 +94,10 @@
     </section>
 </template>
 <script > 
-    import VueDatePicker from '@vuepic/vue-datepicker';
+ import VueDatePicker from '@vuepic/vue-datepicker';
     import '@vuepic/vue-datepicker/dist/main.css'
-    import Swal from 'sweetalert2';
+
     import nacsService from '@/services/nacsService';
-    import strengtheningSupervisionService from '@/services/strengtheningSupervisionService';
     import {isEmpty} from 'lodash';
     import vueFilePond from 'vue-filepond';
     // Import plugins
@@ -112,113 +111,53 @@
     // Create FilePond component
     const FilePond = vueFilePond( FilePondPluginImagePreview,FilePondPluginFileEncode,FilePondPluginFileValidateType);
 
-    import { ref ,computed} from 'vue';
-    import { useRouter } from 'vue-router'
-
+    import { ref } from 'vue';
+    
     export default {
         components:{FilePond,VueDatePicker},
-        setup(){  
+        setup: () => (
+            {  
+                date : ref(new Date()),
+                 format(date) {
+                 const day = date.getDate();
+                 const month = new Intl.DateTimeFormat('es-ES', { month: 'long'}).format(date);
+                 const year = date.getFullYear();
 
-            const router = useRouter()
-
-            const date = ref(new Date());
-
-            const format = (date) => {
-                const day = date.getDate();
-                const month = new Intl.DateTimeFormat('es-ES', { month: 'long'}).format(date);
-                const year = date.getFullYear();
-                return `${month} ${day} de ${year}`;
-            } 
-            
-            const nac=ref(null)
-            const rol=ref(null)
-            const revision_date=ref(null)
-            const user_full_name=ref(null)
-            const start_time=ref(null)
-            const final_time=ref(null)
-            const development_activity_image=ref(null)
-            const evidence_participation_image=ref(null)
-            
-            const nacs=ref(null)
-
-            const getNacs= async () =>{
-                const response = await nacsService.index();
-                nacs.value =  response.data;
-            };
-
-            function fileActivityImage(files){
-                development_activity_image.value = files;
-            }
-
-            function fileParticipationImage(files){
-                evidence_participation_image.value = files;
-            }
-
-            const save = async () =>{
-
-                try {
-                  
-                  //console.log((date.value.getFullYear() + '-' + (date.value.getMonth() + 1) + '-' + date.value.getDate() ));
-                    // Create a formatter using the "sv-SE" locale
-                    const dateFormatter = Intl.DateTimeFormat('sv-SE');
-
-                    let datos={
-                        revision_date:dateFormatter.format(date.value),
-                        nac:nac.value,
-                        rol:rol.value,
-                        start_time:start_time.value,
-                        final_time:final_time.value,
-                        development_activity_image:(!isEmpty(development_activity_image.value))?development_activity_image.value[0].getFileEncodeBase64String():"",
-                        evidence_participation_image:(!isEmpty(evidence_participation_image.value))?evidence_participation_image.value[0].getFileEncodeBase64String():""
-                    }
-
-                    await strengtheningSupervisionService.store(datos);
-
-                    Swal.fire('Exíto', 'Datos guardados con exíto', 'success');
-                    
-                    router.push(
-                        { name:'strengtheningSupervisionMans.index'}
-                    )
-                    
-                } catch (error) {
-                    console.log(error);
-                    Swal.fire('Uppss', 'ha ocurrido un error al procesar la solicitud', 'error');
-
-                }
-
-            }
-
-            getNacs();
-
-            const roles = computed(() => nac.value?nac.value.roles:[]);
-            
+                    return `${month} ${day} de ${year}`;
+                } 
+            }),
+        data (){
             return {
-                nac,
-                rol,
-                revision_date,
-                user_full_name,
-                start_time,
-                final_time,
-                evidence_participation_image,
-                development_activity_image,
-                nacs,
-                date,
-                format,
-                roles,
-
-                getNacs,
-                save,
-                fileActivityImage,
-                fileParticipationImage,
+                supervision_mans:{
+                    nac:{},
+                    rol:'',
+                    revision_date:'',
+                    user_full_name:'',
+                    start_time:'',
+                    final_time:'',
+                    imagen:''
+                },
+                nacs:[],
             }
-      
-
         },
-        /* methods:{
+        methods:{
             handleFilePondUpdateFile(files){
                 this.supervision_mans.imagen = files;
             },
-            
+            async getNacs(){
+                const response = await nacsService.index();
+                this.nacs = response.data.map(x => {
+                    return {
+                        id : x.id,
+                        name : x.name,
+                        roles : x.roles.map(y => {
+                            return {
+                            ...y,
+                            }
+                        })
+                    }
+                });
+            },
             save(){
                 let fecha=this.date.toLocaleDateString();
                 console.log(fecha);
@@ -226,8 +165,8 @@
         },
         created(){
             this.getNacs();
-        }, */
-       /*  computed : {
+        },
+        computed : {
             roles(){
                 if(!isEmpty(this.supervision_mans.nac)){
                     return this.supervision_mans.nac.roles;
@@ -235,6 +174,6 @@
                 return [];
             },
             
-        } */
+        }
     }
 </script>

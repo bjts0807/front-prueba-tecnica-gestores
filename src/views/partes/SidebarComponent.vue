@@ -22,7 +22,7 @@
             </router-link>
           </li>
           <li>
-            <router-link :to="{name:'strengtheningSupervisionMans.create'}">
+            <router-link :to="{name:'strengtheningSupervisionMans.index'}">
               <i class="bi bi-circle"></i><span>Listado</span>
             </router-link>
           </li>

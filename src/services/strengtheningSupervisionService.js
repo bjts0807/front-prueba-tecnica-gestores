@@ -1,9 +1,17 @@
 import Service from "./Service";
 const baseurl = '/api/strengtheningSupervisionMan';
-
+import {isEmpty} from 'lodash';
 export default {
-    index() {
-        return Service.get(`${baseurl}`);
+    async index(search = '',pagination = {}) {
+        let url = `${baseurl}?`;
+
+        url += search !== '' ? `s=${search}` : '';
+
+        url += (!isEmpty(pagination))
+            ? `&paginate=true&per_page=${pagination.per_page}&page=${pagination.page}`
+            : '';
+
+        return Service.get(url);
     },
     store(obj) {
         return Service.post(`${baseurl}/store`, obj);

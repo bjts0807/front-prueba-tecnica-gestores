@@ -48,38 +48,52 @@
                                 </div>
                                 <div class="row mt-2">
                                     <div class="mb-3 col-lg-6 col-md-12 col-sm-12">
-                                        <div class="form-group">
-                                            <label class="form-label">Foto del desarrollo</label>
-                                            <file-pond
-                                                name="test"
-                                                ref="pond"
-                                                max-files="1"
-                                                class-name="my-pond"
-                                                label-idle="Arrastre una imagen o examine su pc..."
-                                                allow-multiple="false"
-                                                accepted-file-types="image/jpeg, image/png, image/jpg"
-                                                labelFileTypeNotAllowed="Tipo de archivo no es valido..."
-                                                fileValidateTypeLabelExpectedTypes="Archivos permitidos png, jpg"
-                                               v-on:updatefiles="fileActivityImage"
-                                            />
+                                        <div class="row">
+                                            <div class="form-group col-lg-8">
+                                                <div class="form-group">
+                                                    <label class="form-label">Foto del desarrollo</label>
+                                                    <file-pond
+                                                        name="test"
+                                                        ref="pond"
+                                                        max-files="1"
+                                                        class-name="my-pond"
+                                                        label-idle="Arrastre una imagen o examine su pc..."
+                                                        allow-multiple="false"
+                                                        accepted-file-types="image/jpeg, image/png, image/jpg"
+                                                        labelFileTypeNotAllowed="Tipo de archivo no es valido..."
+                                                        fileValidateTypeLabelExpectedTypes="Archivos permitidos png, jpg"
+                                                    v-on:updatefiles="fileActivityImage"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div class="form-group col-lg-4">
+                                                <img class="img-fluid avatar-50 mt-4" alt="" :src="'data:image/png;base64,' + development_activity_image" width="64" >
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="mb-3 col-lg-6 col-md-12 col-sm-12">
-                                        <div class="form-group">
-                                            <label class="form-label">Evidencia de particpación</label>
-                                            <file-pond
-                                                name="test"
-                                                ref="pond"
-                                                max-files="1"
-                                                class-name="my-pond"
-                                                label-idle="Arrastre una imagen o examine su pc..."
-                                                allow-multiple="false"
-                                                accepted-file-types="image/jpeg, image/png, image/jpg"
-                                                labelFileTypeNotAllowed="Tipo de archivo no es valido..."
-                                                fileValidateTypeLabelExpectedTypes="Archivos permitidos png, jpg"
-                                                v-on:updatefiles="fileParticipationImage"
-                                            />
+                                        <div class="row">
+                                            <div class="form-group col-lg-8">
+                                                <label class="form-label">Evidencia de particpación</label>
+                                                <file-pond
+                                                    name="test"
+                                                    ref="pond"
+                                                    max-files="1"
+                                                    class-name="my-pond"
+                                                    label-idle="Arrastre una imagen o examine su pc..."
+                                                    allow-multiple="false"
+                                                    accepted-file-types="image/jpeg, image/png, image/jpg"
+                                                    labelFileTypeNotAllowed="Tipo de archivo no es valido..."
+                                                    fileValidateTypeLabelExpectedTypes="Archivos permitidos png, jpg"
+                                                    v-on:updatefiles="fileParticipationImage"
+                                                />
+                                            </div>
+                                            <div class="form-group col-lg-4">
+                                                <img class="img-fluid avatar-50 mt-4" alt="" :src="'data:image/png;base64,' + evidence_participation_image" width="64" height="64" >
+                                            </div>
+                                            
                                         </div>
+                                    
                                     </div>
                                 </div>
                             </div>
@@ -113,10 +127,14 @@
     const FilePond = vueFilePond( FilePondPluginImagePreview,FilePondPluginFileEncode,FilePondPluginFileValidateType);
 
     import { ref ,computed} from 'vue';
-    
+    import { useRouter,useRoute } from 'vue-router'
+
     export default {
         components:{FilePond,VueDatePicker},
         setup(){  
+
+            const router = useRouter()
+            const route = useRoute()
 
             const date = ref(new Date());
 
@@ -135,12 +153,30 @@
             const final_time=ref(null)
             const development_activity_image=ref(null)
             const evidence_participation_image=ref(null)
-            
+            //const id=ref(null)
+            const id = route.params.id; 
+
             const nacs=ref(null)
 
             const getNacs= async () =>{
                 const response = await nacsService.index();
                 nacs.value =  response.data;
+            };
+
+            const show=async ()=>{
+                console.log(1);
+                const response = await strengtheningSupervisionService.show(id);
+
+                var d = new Date(response.data.revision_date);
+                const date_format=d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + (d.getDate()+1);
+                date.value =  date_format.toString();
+
+                nac.value =  response.data.nac;
+                rol.value =  response.data.rol;
+                start_time.value=response.data.start_time;
+                final_time.value=response.data.final_time;
+                evidence_participation_image.value=response.data.evidence_participation_image;
+                development_activity_image.value=response.data.development_activity_image;
             };
 
             function fileActivityImage(files){
@@ -172,7 +208,10 @@
                     await strengtheningSupervisionService.store(datos);
 
                     Swal.fire('Exíto', 'Datos guardados con exíto', 'success');
-                
+                    
+                    router.push(
+                        { name:'strengtheningSupervisionMans.index'}
+                    )
                     
                 } catch (error) {
                     console.log(error);
@@ -183,6 +222,7 @@
             }
 
             getNacs();
+            show();
 
             const roles = computed(() => nac.value?nac.value.roles:[]);
             
@@ -204,6 +244,7 @@
                 save,
                 fileActivityImage,
                 fileParticipationImage,
+                show
             }
       
 

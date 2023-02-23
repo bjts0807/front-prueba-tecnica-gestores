@@ -21,12 +21,23 @@ const routes = [
     meta : {requiresLogin: true},
   },
   {
-    path: "/strengtheningSupervisionMans",
+    path: "/strengtheningSupervisionMans/create",
     name: "strengtheningSupervisionMans.create",
-    component: () => import("../views/strengtheningSupervisionMans/createdosComponent"),
+    component: () => import("../views/strengtheningSupervisionMans/CreateComponent"),
     meta : {requiresLogin: true},
   },
-  
+  {
+    path: "/strengtheningSupervisionMans",
+    name: "strengtheningSupervisionMans.index",
+    component: () => import("../views/strengtheningSupervisionMans/IndexComponent"),
+    meta : {requiresLogin: true},
+  },
+  {
+    path: "/strengtheningSupervisionMans/edit/:id",
+    name: "strengtheningSupervisionMans.edit",
+    component: () => import("../views/strengtheningSupervisionMans/EditComponent"),
+    meta : {requiresLogin: true},
+  },
 ]
 
 const router = createRouter({
