@@ -16,6 +16,9 @@ export default {
     store(obj) {
         return Service.post(`${baseurl}/store`, obj);
     },
+    update(obj) {
+        return Service.put(`${baseurl}/update`, obj);
+    },
     show(id) {
         return Service.get(`${baseurl}/show/${id}`);
     },

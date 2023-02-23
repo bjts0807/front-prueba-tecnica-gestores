@@ -16,6 +16,9 @@
                                     <div class="form-group">
                                         <label class="form-label small">Fecha Revisión</label>
                                        <VueDatePicker v-model="date" :format="format"></VueDatePicker>
+                                       <div v-if="v$.date.$error" class="text-danger" style="font-size:14px" >
+                                            <i class="fa fa-warning fa-fw"></i> Este campo es requerido.
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-md-16 col-sm-12 mb-3">
@@ -24,6 +27,9 @@
                                         <select name="" id="" class="form-control" v-model="nac" >
                                             <option :value="item" v-for="item in nacs" :key="item.id">{{item.name}}</option>
                                         </select>
+                                        <div v-if="v$.nac.$error" class="text-danger" style="font-size:14px" >
+                                            <i class="fa fa-warning fa-fw"></i> Este campo es requerido.
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-md-16 col-sm-12">
@@ -32,18 +38,27 @@
                                         <select name="" id="" class="form-control" v-model="rol" >
                                             <option :value="item" v-for="item in roles" :key="item.id">{{item.name}}</option>
                                         </select>
+                                        <div v-if="v$.rol.$error" class="text-danger" style="font-size:14px" >
+                                            <i class="fa fa-warning fa-fw"></i> Este campo es requerido.
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-md-16 col-sm-12">
                                     <div class="form-group">
                                         <label class="form-label small">Hora Inicio</label>
                                         <input type="time" class="form-control" v-model="start_time">
+                                        <div v-if="v$.start_time.$error" class="text-danger" style="font-size:14px" >
+                                            <i class="fa fa-warning fa-fw"></i> Este campo es requerido.
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-md-16 col-sm-12">
                                     <div class="form-group">
                                         <label class="form-label small">Hora Final</label>
                                         <input type="time" class="form-control" v-model="final_time">
+                                        <div v-if="v$.final_time.$error" class="text-danger" style="font-size:14px" >
+                                            <i class="fa fa-warning fa-fw"></i> Este campo es requerido.
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="row mt-2">
@@ -67,7 +82,7 @@
                                                 </div>
                                             </div>
                                             <div class="form-group col-lg-4">
-                                                <img class="img-fluid avatar-50 mt-4" alt="" :src="'data:image/png;base64,' + development_activity_image" width="64" >
+                                                <img class="img-fluid avatar-50 mt-4" alt="" :src="'data:image/png;base64,' + development_activity_image_file" width="64" >
                                             </div>
                                         </div>
                                     </div>
@@ -88,8 +103,9 @@
                                                     v-on:updatefiles="fileParticipationImage"
                                                 />
                                             </div>
+                                            
                                             <div class="form-group col-lg-4">
-                                                <img class="img-fluid avatar-50 mt-4" alt="" :src="'data:image/png;base64,' + evidence_participation_image" width="64" height="64" >
+                                                <img class="img-fluid avatar-50 mt-4" alt="" :src="'data:image/png;base64,' + evidence_participation_image_file" width="64" height="64" >
                                             </div>
                                             
                                         </div>
@@ -128,6 +144,9 @@
 
     import { ref ,computed} from 'vue';
     import { useRouter,useRoute } from 'vue-router'
+    
+    import { useVuelidate } from '@vuelidate/core'
+    import { required } from '@vuelidate/validators'
 
     export default {
         components:{FilePond,VueDatePicker},
@@ -153,6 +172,8 @@
             const final_time=ref(null)
             const development_activity_image=ref(null)
             const evidence_participation_image=ref(null)
+            const evidence_participation_image_file=ref(null)
+            const development_activity_image_file=ref(null)
             //const id=ref(null)
             const id = route.params.id; 
 
@@ -175,8 +196,8 @@
                 rol.value =  response.data.rol;
                 start_time.value=response.data.start_time;
                 final_time.value=response.data.final_time;
-                evidence_participation_image.value=response.data.evidence_participation_image;
-                development_activity_image.value=response.data.development_activity_image;
+                evidence_participation_image_file.value=response.data.evidence_participation_image;
+                development_activity_image_file.value=response.data.development_activity_image;
             };
 
             function fileActivityImage(files){
@@ -190,13 +211,18 @@
             const save = async () =>{
 
                 try {
-                  
+                    const result = await v$.value.$validate()
+                    if (!result) {
+                        Swal.fire('Error','Por favor verifique que no existan campos vacios','warning');
+                        return
+                    }
                   //console.log((date.value.getFullYear() + '-' + (date.value.getMonth() + 1) + '-' + date.value.getDate() ));
                     // Create a formatter using the "sv-SE" locale
-                    const dateFormatter = Intl.DateTimeFormat('sv-SE');
+                    //const dateFormatter = Intl.DateTimeFormat('sv-SE');
 
                     let datos={
-                        revision_date:dateFormatter.format(date.value),
+                        id:route.params.id,
+                        revision_date:(date.value.getFullYear() + '-' + (date.value.getMonth() + 1) + '-' + date.value.getDate() ),
                         nac:nac.value,
                         rol:rol.value,
                         start_time:start_time.value,
@@ -205,7 +231,7 @@
                         evidence_participation_image:(!isEmpty(evidence_participation_image.value))?evidence_participation_image.value[0].getFileEncodeBase64String():""
                     }
 
-                    await strengtheningSupervisionService.store(datos);
+                    await strengtheningSupervisionService.update(datos);
 
                     Swal.fire('Exíto', 'Datos guardados con exíto', 'success');
                     
@@ -226,6 +252,26 @@
 
             const roles = computed(() => nac.value?nac.value.roles:[]);
             
+            const rules = {
+                start_time: { required },
+                final_time: { required },
+                date: { required },
+                nac: { required },
+                rol: { required },
+
+            }
+
+            const v$ = useVuelidate(
+                rules,
+                { 
+                    start_time,
+                    final_time,
+                    date,
+                    nac,
+                    rol
+                }
+            )
+
             return {
                 nac,
                 rol,
@@ -235,6 +281,8 @@
                 final_time,
                 evidence_participation_image,
                 development_activity_image,
+                development_activity_image_file,
+                evidence_participation_image_file,
                 nacs,
                 date,
                 format,
@@ -244,7 +292,8 @@
                 save,
                 fileActivityImage,
                 fileParticipationImage,
-                show
+                show,
+                v$
             }
       
 
