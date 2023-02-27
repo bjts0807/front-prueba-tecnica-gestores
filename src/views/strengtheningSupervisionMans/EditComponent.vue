@@ -15,7 +15,7 @@
                                 <div class="col-lg-3 col-md-16 col-sm-12">
                                     <div class="form-group">
                                         <label class="form-label small">Fecha Revisión</label>
-                                       <VueDatePicker v-model="date" :format="format"></VueDatePicker>
+                                       <VueDatePicker v-model="date"  :format="format" select-text="Ok" cancel-text="Cerrar" ></VueDatePicker>
                                        <div v-if="v$.date.$error" class="text-danger" style="font-size:14px" >
                                             <i class="fa fa-warning fa-fw"></i> Este campo es requerido.
                                         </div>
@@ -147,7 +147,14 @@
     
     import { useVuelidate } from '@vuelidate/core'
     import { required } from '@vuelidate/validators'
+    import localeData from 'dayjs/plugin/localeData'
+    import dayjs from 'dayjs'
+    dayjs.extend(localeData);
 
+    import('dayjs/locale/es').then(() => {
+        dayjs.locale('es');
+    });
+    
     export default {
         components:{FilePond,VueDatePicker},
         setup(){  
@@ -157,12 +164,7 @@
 
             const date = ref(new Date());
 
-            const format = (date) => {
-                const day = date.getDate();
-                const month = new Intl.DateTimeFormat('es-ES', { month: 'long'}).format(date);
-                const year = date.getFullYear();
-                return `${month} ${day} de ${year}`;
-            } 
+            const format = (date) => dayjs(date).format("MMMM DD [de] YYYY"); 
             
             const nac=ref(null)
             const rol=ref(null)
@@ -185,13 +187,8 @@
             };
 
             const show=async ()=>{
-                console.log(1);
                 const response = await strengtheningSupervisionService.show(id);
-
-                var d = new Date(response.data.revision_date);
-                const date_format=d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + (d.getDate()+1);
-                date.value =  date_format.toString();
-
+                date.value = dayjs(response.data.revision_date).toDate();
                 nac.value =  response.data.nac;
                 rol.value =  response.data.rol;
                 start_time.value=response.data.start_time;
@@ -212,17 +209,15 @@
 
                 try {
                     const result = await v$.value.$validate()
+
                     if (!result) {
                         Swal.fire('Error','Por favor verifique que no existan campos vacios','warning');
                         return
                     }
-                  //console.log((date.value.getFullYear() + '-' + (date.value.getMonth() + 1) + '-' + date.value.getDate() ));
-                    // Create a formatter using the "sv-SE" locale
-                    //const dateFormatter = Intl.DateTimeFormat('sv-SE');
 
                     let datos={
                         id:route.params.id,
-                        revision_date:(date.value.getFullYear() + '-' + (date.value.getMonth() + 1) + '-' + date.value.getDate() ),
+                        revision_date:dayjs(date.value).format('YYYY-MM-DD'),
                         nac:nac.value,
                         rol:rol.value,
                         start_time:start_time.value,
@@ -287,7 +282,6 @@
                 date,
                 format,
                 roles,
-
                 getNacs,
                 save,
                 fileActivityImage,
@@ -295,30 +289,6 @@
                 show,
                 v$
             }
-      
-
         },
-        /* methods:{
-            handleFilePondUpdateFile(files){
-                this.supervision_mans.imagen = files;
-            },
-            
-            save(){
-                let fecha=this.date.toLocaleDateString();
-                console.log(fecha);
-            }
-        },
-        created(){
-            this.getNacs();
-        }, */
-       /*  computed : {
-            roles(){
-                if(!isEmpty(this.supervision_mans.nac)){
-                    return this.supervision_mans.nac.roles;
-                }
-                return [];
-            },
-            
-        } */
     }
 </script>
